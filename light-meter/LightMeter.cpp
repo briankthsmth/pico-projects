@@ -63,8 +63,14 @@ int main() {
   light_sensor.init();
     
 loop:
-  auto value = light_sensor.readAmbientLight();
-  display.draw(value, 0);  
+  light_sensor.read();
+  auto lux = light_sensor.getAmbientLightLux();
+  display.draw(lux, 0);  
+  auto ambient_light = light_sensor.getAmbientLight();
+  display.draw(ambient_light, 1);
+  auto white_channel = light_sensor.getWhiteChannel();
+  display.draw(white_channel, 2);
+  
   sleep_ms(2000);
   goto loop;
 

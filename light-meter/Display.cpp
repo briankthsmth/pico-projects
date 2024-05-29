@@ -109,18 +109,30 @@ int Display::RenderArea::getBufferLength() {
 
 void Display::draw(float number, int line) {
   char number_string[maximumCharacters + 1];
-  char full_line_string[maximumCharacters + 1];
 
   const char *format = number > 1000 ? "%.0f" : "%.2f";
   snprintf(&number_string[0], maximumCharacters + 1, format, number);
+  draw(&number_string[0], line);
+}
+
+void Display::draw(int number, int line) {
+  static const char* format = "%d";
+
+  char number_string[maximumCharacters + 1];
+  snprintf(&number_string[0], maximumCharacters + 1, format, number);
+  draw(&number_string[0], line);  
+}
+
+void Display::draw(const char* string, int line) {
+  char full_line_string[maximumCharacters + 1];
   snprintf(&full_line_string[0], maximumCharacters + 1, "%*s",
-           maximumCharacters, number_string);
+           maximumCharacters, string);
 
   FontManager font_manager;
   auto display_line = font_manager.buildLine(full_line_string);
   Display::RenderArea line_area = {startColumn, endColumn,
-                                   static_cast<uint8_t>(line),
-                                   static_cast<uint8_t>(line + 1)};
+                                   static_cast<uint8_t>(line * 2),
+                                   static_cast<uint8_t>(line * 2 + 1)};
   render(&display_line.image[0][0], line_area);
 }
 

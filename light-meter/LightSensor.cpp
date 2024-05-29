@@ -54,7 +54,7 @@ const float c1 = 1.0023;
 // Command codes
 constexpr uint8_t als_config_command_code = 0x00;
 constexpr uint8_t ambient_light_command_code = 0x04;
-constexpr uint8_t white_command_code = 0x05;
+constexpr uint8_t white_channel_command_code = 0x05;
 
 // LUX multiplier. Ordered by integration time then gain.
 constexpr uint16_t als_count_limit = 10000;
@@ -78,7 +78,12 @@ void LightSensor::init() {
   sleep_ms(3);
 }
 
-float LightSensor::readAmbientLight() {
+void LightSensor::read() {
+  whiteChannel = readWhiteChannelRegister();
+  readAmbientLight();
+}
+
+void LightSensor::readAmbientLight() {
   AlsConfigRegister config_register = readConfigRegister();
 
   uint16_t counts = readAmbientLightRegister();
@@ -123,14 +128,15 @@ float LightSensor::readAmbientLight() {
     lux = (((c4 * lux + c3) * lux + c2) * lux + c1) * lux;
   }
 
+  ambientLight = counts;
+  ambientLightLux = lux;
+  
   // restore the gain and integration times to 1/8 and 100 ms.
   shutdown(config_register);
   config_register.setGain(AlsConfigRegister::low);
   config_register.setIntegrationTime(AlsConfigRegister::ms_100);
   writeConfigRegister(config_register);
   powerOn(config_register);
-  
-  return static_cast<float>(lux);
 }
 
 void LightSensor::powerOn(AlsConfigRegister& config_register) {
@@ -155,6 +161,11 @@ void LightSensor::writeConfigRegister(AlsConfigRegister config_register) {
 
 uint16_t LightSensor::readAmbientLightRegister() {
   Register reg = readRegister(ambient_light_command_code);
+  return reg.value;
+}
+
+uint16_t LightSensor::readWhiteChannelRegister() {
+  Register reg = readRegister(white_channel_command_code);
   return reg.value;
 }
 

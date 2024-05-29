@@ -48,8 +48,17 @@ public:
   ~LightSensor() = default;
   
   void init();
-  float readAmbientLight();
-  
+  /*
+   * Read the ambient light register and calculate the lux. Plus, read the white
+   * channel register.
+   */
+  void read();
+  void readAmbientLight();
+
+  float getAmbientLightLux() { return ambientLightLux; }
+  uint16_t getAmbientLight() { return ambientLight; }
+  uint16_t getWhiteChannel() { return whiteChannel; }
+
 private:
   struct Register {
     union {
@@ -62,6 +71,10 @@ private:
     Register() : value(0) {}
     Register(uint16_t value) : value(value) {}
   };
+  
+  float ambientLightLux;
+  uint16_t ambientLight;
+  uint16_t whiteChannel;
 
   void powerOn(AlsConfigRegister&);
   void shutdown(AlsConfigRegister&);
@@ -70,6 +83,7 @@ private:
   void writeConfigRegister(AlsConfigRegister);
   
   uint16_t readAmbientLightRegister();
+  uint16_t readWhiteChannelRegister();
   
   Register readRegister(CommandCode);
   void writeRegister(CommandCode, Register);

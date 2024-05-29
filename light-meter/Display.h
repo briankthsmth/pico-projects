@@ -85,9 +85,18 @@ public:
 
   void render(uint8_t *, RenderArea);
 
-  /*! Draw a floating point number at a given line number.
-   */
+  //
+  // Draw a floating point number at a given line number.
+  //
   void draw(float, int);
+  //
+  // Draw an integer number at a given line number.
+  //
+  void draw(int, int);
+  //
+  // Draw a string at a given line number. This will right justify the string.
+  //
+  void draw(const char *, int);
 
 private:
   static void sendCommandList(uint8_t *, int);
