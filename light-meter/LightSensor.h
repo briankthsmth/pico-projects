@@ -75,6 +75,10 @@ private:
   float ambientLightLux;
   uint16_t ambientLight;
   uint16_t whiteChannel;
+  
+  void setAmbientLightLux(float);
+  void setAmbientLight(uint16_t);
+  void setWhiteChannel(uint16_t);
 
   void powerOn(AlsConfigRegister&);
   void shutdown(AlsConfigRegister&);

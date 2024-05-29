@@ -45,19 +45,26 @@
 
 constexpr uint8_t address = 0x10;
 
+//
 // LUX correction constants
+//
 const float c4 = 6.0135E-13;
 const float c3 = -9.3924E-9;
 const float c2 = 8.1488E-5;
 const float c1 = 1.0023;
 
+//
 // Command codes
+//
 constexpr uint8_t als_config_command_code = 0x00;
 constexpr uint8_t ambient_light_command_code = 0x04;
 constexpr uint8_t white_channel_command_code = 0x05;
 
-// LUX multiplier. Ordered by integration time then gain.
+//
+// ALS Constants
+//
 constexpr uint16_t als_count_limit = 10000;
+// LUX multiplier. Ordered by integration time then gain.
 const float lux_multipliers[6][4] = {
   {2.1504, 1.0752, 0.2688, 0.1344},
   {1.0752, 0.5376, 0.1344, 0.0672},
@@ -70,6 +77,9 @@ const uint32_t integration_times[] = {30, 60, 110, 220, 440, 880};
 
 using namespace LightMeter;
 
+//
+// Public Interface
+//
 void LightSensor::init() {
   AlsConfigRegister config_register;
   config_register.setting.power = AlsConfigRegister::on;
@@ -79,7 +89,7 @@ void LightSensor::init() {
 }
 
 void LightSensor::read() {
-  whiteChannel = readWhiteChannelRegister();
+  setWhiteChannel(readWhiteChannelRegister());
   readAmbientLight();
 }
 
@@ -128,8 +138,8 @@ void LightSensor::readAmbientLight() {
     lux = (((c4 * lux + c3) * lux + c2) * lux + c1) * lux;
   }
 
-  ambientLight = counts;
-  ambientLightLux = lux;
+  setAmbientLight(counts);
+  setAmbientLightLux(lux);
   
   // restore the gain and integration times to 1/8 and 100 ms.
   shutdown(config_register);
@@ -137,6 +147,21 @@ void LightSensor::readAmbientLight() {
   config_register.setIntegrationTime(AlsConfigRegister::ms_100);
   writeConfigRegister(config_register);
   powerOn(config_register);
+}
+
+//
+// Private Interface
+//
+void LightSensor::setAmbientLightLux(float value) {
+  ambientLightLux = value;
+}
+
+void LightSensor::setAmbientLight(uint16_t value) {
+  ambientLight = value;
+}
+
+void LightSensor::setWhiteChannel(uint16_t value) {
+  whiteChannel = value;
 }
 
 void LightSensor::powerOn(AlsConfigRegister& config_register) {
