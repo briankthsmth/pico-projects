@@ -39,9 +39,9 @@
 
 #include "hardware/i2c.h"
 #include "pico/time.h"
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
-#include <math.h>
 
 constexpr uint8_t address = 0x10;
 
@@ -57,6 +57,7 @@ constexpr uint8_t ambient_light_command_code = 0x04;
 constexpr uint8_t white_command_code = 0x05;
 
 // LUX multiplier. Ordered by integration time then gain.
+constexpr uint16_t als_count_limit = 10000;
 const float lux_multipliers[6][4] = {
   {2.1504, 1.0752, 0.2688, 0.1344},
   {1.0752, 0.5376, 0.1344, 0.0672},
@@ -65,7 +66,6 @@ const float lux_multipliers[6][4] = {
   {0.1344, 0.0672, 0.0168, 0.0084}, 
   {0.0672, 0.0336, 0.0084, 0.0042}
 };
-
 const uint32_t integration_times[] = {30, 60, 110, 220, 440, 880};
 
 using namespace LightMeter;
@@ -100,7 +100,7 @@ float LightSensor::readAmbientLight() {
     counts = readAmbientLightRegister();
   }
 
-  while (counts > 10000 &&
+  while (counts > als_count_limit &&
          config_register.getIntegrationTime() != AlsConfigRegister::ms_25) 
   {
     shutdown(config_register);
@@ -111,11 +111,15 @@ float LightSensor::readAmbientLight() {
     counts = readAmbientLightRegister();
   }
 
+  // Based on the application notes the sensor is not very accurate above 10,000 counts.
+  // So, limit the counts to this if increasing integration time failed.
+  counts = std::min(als_count_limit, counts);
+  
   int time_index =  config_register.getIntegrationTime();
   int gain_index = config_register.getGain();
   float multiplier = lux_multipliers[time_index][gain_index];
   float lux = counts * multiplier;
-  if (lux > 1000.0) {
+  if (lux > 1000.0 && config_register.getGain() < AlsConfigRegister::medium_high) {
     lux = (((c4 * lux + c3) * lux + c2) * lux + c1) * lux;
   }
 
