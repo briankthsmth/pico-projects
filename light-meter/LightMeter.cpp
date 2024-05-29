@@ -32,7 +32,6 @@
 // Created by Brian Smith 4/30/2024
 //
 
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -65,17 +64,7 @@ int main() {
     
 loop:
   auto value = light_sensor.readAmbientLight();
-  char formatted_string[8];
-  sprintf(&formatted_string[0], "%6.1f", value);
-  auto line = font_manager.buildLine(formatted_string);
-  Display::RenderArea line_area = {
-    32,
-    32 + 63,
-    1,
-    2
-  };
-  display.render(&line.image[0][0], line_area);
-  
+  display.draw(value, 0);  
   sleep_ms(2000);
   goto loop;
 

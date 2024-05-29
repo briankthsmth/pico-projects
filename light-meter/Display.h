@@ -85,13 +85,14 @@ public:
 
   void render(uint8_t *, RenderArea);
 
-  void drawCharacter(uint8_t /*character*/);
+  /*! Draw a floating point number at a given line number.
+   */
+  void draw(float, int);
 
+private:
   static void sendCommandList(uint8_t *, int);
   static void sendCommand(uint8_t);
   static void sendData(uint8_t *, int);
-
-private:
 };
 
 }; // namespace LightMeter
