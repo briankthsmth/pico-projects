@@ -50,16 +50,19 @@ pico_sdk_init()
 add_executable(light_meter
     LightMeter.cpp
     Display.cpp
-    LightSensor.cpp
     FontManager.cpp
     DisplayLine.cpp
     Glyph.cpp
+    LightSensor.cpp
+    AlsConfigRegister.cpp
 )
 
 target_link_libraries(
-    light_meter
+  light_meter
 	pico_stdlib 
 	hardware_i2c 
 )
 
 pico_add_extra_outputs(light_meter)
+pico_set_float_implementation(light_meter pico)
+pico_set_double_implementation(light_meter pico)

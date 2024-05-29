@@ -28,53 +28,69 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //
-//
-// Created by Brian Smith 05/20/2024
+// Created by Brian Smith 05/22/2024
 //
 
-#ifndef LIGHTSENSOR_H
-#define LIGHTSENSOR_H
+#ifndef ALSCONFIGREGISTER_H
+#define ALSCONFIGREGISTER_H
 
 #include <cstdint>
 
 namespace LightMeter {
 
-struct AlsConfigRegister;
-typedef uint8_t CommandCode;
-
-class LightSensor {
-public:
-  LightSensor() = default;
-  ~LightSensor() = default;
-  
-  void init();
-  float readAmbientLight();
-  
-private:
-  struct Register {
-    union {
-      uint16_t value;
-      struct {
-        uint8_t lsb : 8;
-        uint8_t msb : 8;
-      } data_byte;
-    };
-    Register() : value(0) {}
-    Register(uint16_t value) : value(value) {}
+struct AlsConfigRegister {
+  union {
+    uint16_t value;
+    struct {
+      uint8_t lsb : 8;
+      uint8_t msb : 8;
+    } data_byte;
+    struct {
+      uint8_t power                   : 1;
+      uint8_t interupt_enable         : 1;
+      uint8_t                         : 2;
+      uint8_t persistance_protect     : 2;
+      uint8_t integration_time_lower  : 2; // Split into 2 bits as it straddles the LSB and MSB
+      uint8_t integration_time_upper  : 2;      
+      uint8_t                         : 1;
+      uint8_t gain                    : 2;
+    } setting;
   };
 
-  void powerOn(AlsConfigRegister&);
-  void shutdown(AlsConfigRegister&);
+  enum Power : uint8_t { on, off };
+  enum InterruptEnable : uint8_t { disable, enable };
+  enum PersistanceProtect : uint8_t { one, two, four, eight };
+  enum IntegrationTime : int {
+    ms_25,
+    ms_50,
+    ms_100,
+    ms_200,
+    ms_400,
+    ms_800,
+  };
   
-  AlsConfigRegister readConfigRegister();
-  void writeConfigRegister(AlsConfigRegister);
+  enum Gain : int {
+    low,         // 1/8
+    medium_low,  // 1/4
+    medium_high, // 1
+    high         // 2
+  };
   
-  uint16_t readAmbientLightRegister();
   
-  Register readRegister(CommandCode);
-  void writeRegister(CommandCode, Register);
+  AlsConfigRegister();
+  AlsConfigRegister(uint16_t value) : value(value) {}
+  
+  void setGain(Gain);
+  Gain getGain();
+  void increaseGain();
+  void decreaseGain();
+
+  void setIntegrationTime(IntegrationTime);
+  IntegrationTime getIntegrationTime();  
+  void increaseIntegrationTime();
+  void decreaseIntegrationTime();
 };
 
 }; // namespace LightMeter
 
-#endif // LIGHTSENSOR_H
+#endif //  ALSCONFIGREGISTER_H
