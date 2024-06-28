@@ -37,9 +37,10 @@
 
 #include <cstdint>
 
+#include "AlsConfigRegister.h"
+
 namespace LightMeter {
 
-struct AlsConfigRegister;
 typedef uint8_t CommandCode;
 
 class LightSensor {
@@ -53,12 +54,14 @@ public:
    * channel register.
    */
   void read();
-  void readAmbientLight();
 
   float getAmbientLightLux() { return ambientLightLux; }
-  uint16_t getAmbientLight() { return ambientLight; }
-  uint16_t getWhiteChannel() { return whiteChannel; }
-
+  float getWhiteChannel() { return whiteChannel; }
+  AlsConfigRegister::Gain getGainWhenRead() { return gainWhenRead; }
+  AlsConfigRegister::IntegrationTime getIntegrationTimeWhenRead() { 
+    return integrationTimeWhenRead; 
+  }
+  
 private:
   struct Register {
     union {
@@ -72,12 +75,13 @@ private:
     Register(uint16_t value) : value(value) {}
   };
   
-  float ambientLightLux;
-  uint16_t ambientLight;
-  uint16_t whiteChannel;
+  float ambientLightLux = 0;
+  float whiteChannel = 0;
+  AlsConfigRegister::Gain gainWhenRead;
+  AlsConfigRegister::IntegrationTime integrationTimeWhenRead;
   
-  void setAmbientLightLux(float);
-  void setAmbientLight(uint16_t);
+  
+  void setAmbientLightLux(uint16_t);
   void setWhiteChannel(uint16_t);
 
   void powerOn(AlsConfigRegister&);

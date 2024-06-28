@@ -37,17 +37,21 @@
 #include <cstdint>
 #include <cstdio>
 
-constexpr uint8_t default_gain = 0x02;
+using namespace LightMeter;
+
+constexpr AlsConfigRegister::Gain default_gain = AlsConfigRegister::low;
+constexpr AlsConfigRegister::IntegrationTime default_integration_time 
+  = LightMeter::AlsConfigRegister::ms_100;
 
 const uint8_t gain_values[] = {0x02, 0x03, 0x00, 0x01};
 constexpr int gain_values_count = 4;
 const uint8_t integration_time_values[] = {0x0c, 0x08, 0x00, 0x01, 0x02, 0x03};
 constexpr int integration_time_values_count = 6;
 
-using namespace LightMeter;
 
 AlsConfigRegister::AlsConfigRegister() : value(0x0001) {
-  setting.gain = default_gain;
+  setGain(default_gain);
+  setIntegrationTime(default_integration_time);
 }
 
 void AlsConfigRegister::setGain(Gain gain) {

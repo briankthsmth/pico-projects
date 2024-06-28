@@ -73,7 +73,8 @@ const float lux_multipliers[6][4] = {
   {0.1344, 0.0672, 0.0168, 0.0084}, 
   {0.0672, 0.0336, 0.0084, 0.0042}
 };
-const uint32_t integration_times[] = {30, 60, 110, 220, 440, 880};
+const uint32_t integration_times[] = {25, 50, 100, 200, 400, 800}; //ms
+const float gain_values[] = {0.125, 0.25, 1, 2};
 
 using namespace LightMeter;
 
@@ -89,11 +90,6 @@ void LightSensor::init() {
 }
 
 void LightSensor::read() {
-  setWhiteChannel(readWhiteChannelRegister());
-  readAmbientLight();
-}
-
-void LightSensor::readAmbientLight() {
   AlsConfigRegister config_register = readConfigRegister();
 
   uint16_t counts = readAmbientLightRegister();
@@ -111,7 +107,6 @@ void LightSensor::readAmbientLight() {
     }
     
     powerOn(config_register);
-    
     counts = readAmbientLightRegister();
   }
 
@@ -125,21 +120,11 @@ void LightSensor::readAmbientLight() {
     
     counts = readAmbientLightRegister();
   }
-
-  // Based on the application notes the sensor is not very accurate above 10,000 counts.
-  // So, limit the counts to this if increasing integration time failed.
-  counts = std::min(als_count_limit, counts);
   
-  int time_index =  config_register.getIntegrationTime();
-  int gain_index = config_register.getGain();
-  float multiplier = lux_multipliers[time_index][gain_index];
-  float lux = counts * multiplier;
-  if (lux > 1000.0 && config_register.getGain() < AlsConfigRegister::medium_high) {
-    lux = (((c4 * lux + c3) * lux + c2) * lux + c1) * lux;
-  }
-
-  setAmbientLight(counts);
-  setAmbientLightLux(lux);
+  gainWhenRead = config_register.getGain();
+  integrationTimeWhenRead = config_register.getIntegrationTime();
+  setAmbientLightLux(readAmbientLightRegister());
+  setWhiteChannel(readWhiteChannelRegister());
   
   // restore the gain and integration times to 1/8 and 100 ms.
   shutdown(config_register);
@@ -152,22 +137,52 @@ void LightSensor::readAmbientLight() {
 //
 // Private Interface
 //
-void LightSensor::setAmbientLightLux(float value) {
-  ambientLightLux = value;
+
+///
+/// \brief Set the ambient light lux value with the channel count.
+///
+/// \details Calculates the lux value by multiplying adjusted for gain and integration
+///  time. If the value is over 1000 lux the value is adjusted by a fourth order
+///  polynomial for non-linearity in the sensor. Above 10,000 counts the sensor is 
+///  consider very non-linear, so the value is clamped to this value.
+///
+/// \params counts The ambient light sensor counts.
+///
+void LightSensor::setAmbientLightLux(uint16_t counts) {
+  // Based on the application notes the sensor is not very accurate above 10,000 counts.
+  // So, limit the counts to this if increasing integration time failed.
+  counts = std::min(als_count_limit, counts);
+  
+  int time_index =  integrationTimeWhenRead;
+  int gain_index = gainWhenRead;
+  float multiplier = lux_multipliers[time_index][gain_index];
+  float lux = counts * multiplier;
+  if (lux > 1000.0 && getGainWhenRead() < AlsConfigRegister::medium_high) {
+    lux = (((c4 * lux + c3) * lux + c2) * lux + c1) * lux;
+  }
+  ambientLightLux = lux;
 }
 
-void LightSensor::setAmbientLight(uint16_t value) {
-  ambientLight = value;
-}
-
-void LightSensor::setWhiteChannel(uint16_t value) {
-  whiteChannel = value;
+///
+/// \brief Set the white channel value.
+///
+/// \details Set the white channel value from the counts normalizing it for the gain and 
+/// integration time when the register was read. The value is in counts/ms.
+///
+/// \param count The white channel count.
+/// 
+void LightSensor::setWhiteChannel(uint16_t count) {
+  float time = static_cast<float>(integration_times[getIntegrationTimeWhenRead()]);
+  float gain = gain_values[getGainWhenRead()];
+  whiteChannel = static_cast<float>(count) / (gain * time);
 }
 
 void LightSensor::powerOn(AlsConfigRegister& config_register) {
   config_register.setting.power = AlsConfigRegister::on;
   writeConfigRegister(config_register);
-  sleep_ms(integration_times[config_register.getIntegrationTime()]);
+  uint32_t integration_time = integration_times[config_register.getIntegrationTime()];
+  uint32_t delay_time = integration_time + (integration_time * 18)/100;
+  sleep_ms(delay_time);
 }
 
 void LightSensor::shutdown(AlsConfigRegister& config_register) {
