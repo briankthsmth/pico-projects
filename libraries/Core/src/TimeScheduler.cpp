@@ -38,13 +38,13 @@
 
 #include "ControlConfiguration.h"
 #include "PowerDevice.h"
-#include "TimeDevice.h"
+#include "RealTimeClockDevice.h"
 
 using namespace Core;
 
-TimeScheduler::TimeScheduler(PowerDevice &powerDevice, 
-                             TimeDevice &timeDevice,
-                             ControlConfiguration &configuration)
+TimeScheduler::TimeScheduler(PowerDevice& powerDevice, 
+                             RealTimeClockDevice& timeDevice,
+                             ControlConfiguration& configuration)
     : powerDevice(powerDevice), timeDevice(timeDevice),
       configuration(configuration) {}
 

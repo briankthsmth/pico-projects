@@ -29,25 +29,19 @@
 #
 #
 #
-# Created by Brian Smith 07/05/2024
+# Created by Brian Smith 07/12/2024
 #
 
-cmake_minimum_required(VERSION 3.26)
+add_executable(set-clock
+  SetClock.cpp
+)
 
-include(pico_sdk_import.cmake)
+target_link_libraries(set-clock
+	pico_stdlib 
+	Core
+	Devices
+)
 
-set(CMAKE_C_STANDARD 23)
-set(CMAKE_CXX_STANDARD 23)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-if(CMAKE_EXPORT_COMPILE_COMMANDS)
-    set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
-endif()
-
-pico_sdk_init()
-
-project(pico_projects C CXX)
-
-add_subdirectory(libraries)
-add_subdirectory(power-controller)
-add_subdirectory(rtc-utils)
+pico_add_extra_outputs(set-clock)
+pico_set_float_implementation(set-clock pico)
+pico_set_double_implementation(set-clock pico)

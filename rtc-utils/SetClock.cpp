@@ -29,48 +29,23 @@
 //
 //
 //
-// Created by Brian Smith 07/03/2024
+// Created by Brian Smith 07/12/2024
 //
-
-#include "pico/stdlib.h"
-#include "pico/time.h"
 
 #include <cstdio>
 
+#include "pico/stdlib.h"
+
+#include "RealTimeClockDevice.h"
 #include "AfDS3231PrecisionRtcDevice.h"
-#include "AfPowerRelayDevice.h"
-#include "ControlConfiguration.h"
-#include "SerialBus.h"
-#include "TimeScheduler.h"
 
 int main() {
-
-  //
-  // Setup
-  //
   stdio_init_all();
+
+  Core::RealTimeClockDevice::ClockReading clockReading;
+  auto timeStamp = __TIMESTAMP__;
   
-  Core::SerialBus serial_bus;
-  
-  Device::AfDS3231PrecisionRtcDevice time_device(serial_bus); 
-  time_device.begin();
-  
-  Device::AfPowerRelayDevice power_device;
-  power_device.begin();
-  
-  Core::ControlConfiguration configuration;
-  configuration.startTime.hour = 7; 
-  configuration.endTime.hour = 21;
-  
-  Core::TimeScheduler scheduler(power_device, time_device, configuration);
-  
-  auto time = time_device.readTime();
-  printf("%d:%d:%d\n", time.hour, time.minutes, time.seconds);
-  
-loop:
-  scheduler.update();
-  sleep_ms(5000); // sleep for 5 seconds
-  goto loop;
+  printf("%s\n", timeStamp);
   
   return 0;
 }

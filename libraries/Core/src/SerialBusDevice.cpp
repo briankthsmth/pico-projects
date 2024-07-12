@@ -34,6 +34,23 @@
 
 #include "SerialBusDevice.h"
 
+#include "SerialBus.h"
+
 using namespace Core;
 
 SerialBusDevice::~SerialBusDevice() {}
+
+void SerialBusDevice::writeRegister(uint8_t address, uint8_t data) {
+}
+
+uint8_t SerialBusDevice::readRegister(uint8_t address) {
+  return 0; 
+}
+
+void SerialBusDevice::writeRegisters(uint8_t startAddress, uint8_t* source, size_t length) {
+}
+
+void SerialBusDevice::readRegisters(uint8_t startAddress, uint8_t* destination, size_t length) {
+  serialBus.write(deviceAddress, &startAddress, 1, SerialBus::none);
+  serialBus.read(deviceAddress, destination, length);
+}

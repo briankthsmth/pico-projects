@@ -36,6 +36,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace Core {
 
 ///
@@ -43,13 +45,57 @@ namespace Core {
 /// \Description Defines an interface for devices that provide date and time
 ///   information.
 ///
-class TimeDevice {
+class RealTimeClockDevice {
 public:
-  TimeDevice() = default;
-  TimeDevice(const TimeDevice&) = delete;
-  ~TimeDevice() = default;
+  struct Time {
+    uint8_t seconds;
+    uint8_t minutes;
+    uint8_t hour;
+  };
   
+  struct Date {
+    uint8_t day;
+    uint8_t date;
+    uint8_t month;
+    uint8_t year;
+  };
+  
+  struct ClockReading {
+    Time time;
+    Date date;
+  };
+  
+  RealTimeClockDevice() = default;
+  RealTimeClockDevice(const RealTimeClockDevice&) = delete;
+  ~RealTimeClockDevice() = default;
+  
+  virtual Time readTime() = 0;
+//   virtual Date readDate() = 0;
+//   virtual ClockReading read() = 0;
+  
+protected:
+  struct TimeBuffer {
+    union {
+      uint8_t data[3];
+      Time time;
+    };
+  };
+
+  struct DataBuffer {
+    union {
+      uint8_t data[3];
+      Date date;
+    };
+  };
+
+  struct ClockReadingBuffer {
+    union {
+      uint8_t data[16];
+      ClockReading reading;
+    };
+  };
+
 private:
-}; // class TimeDevice
+}; // class RealTimeClockDevice
 
 }; // namespace Core

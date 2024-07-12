@@ -36,6 +36,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace Core {
@@ -47,8 +48,13 @@ class SerialBus;
 ///
 class SerialBusDevice {
 public:
-  SerialBusDevice(SerialBus &bus, uint8_t address) : serialBus(bus), address(address) {}
+  SerialBusDevice(SerialBus &bus, uint8_t address) : serialBus(bus), deviceAddress(address) {}
   virtual ~SerialBusDevice() = 0;
+
+  void writeRegister(uint8_t address, uint8_t data);
+  uint8_t readRegister(uint8_t address);
+  void writeRegisters(uint8_t startAddress, uint8_t* source, size_t length);
+  void readRegisters(uint8_t startAddress, uint8_t* destination, size_t length);
 
 protected:
   ///
@@ -58,7 +64,7 @@ protected:
   ///
   /// \brief Bus address for a physical device.
   ///
-  uint8_t address;
+  uint8_t deviceAddress;
 }; // class SerialBusDevice
 
 }; // namespace Core

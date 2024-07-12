@@ -36,19 +36,19 @@
 
 namespace Core {
   class PowerDevice;
-  class TimeDevice;
+  class RealTimeClockDevice;
   class ControlConfiguration;
   
   class TimeScheduler final {
     public:
       TimeScheduler() = delete;
-      TimeScheduler(PowerDevice&, TimeDevice&, ControlConfiguration&);
+      TimeScheduler(PowerDevice&, RealTimeClockDevice&, ControlConfiguration&);
       
       void update();
       
     private:
       PowerDevice& powerDevice;
-      TimeDevice& timeDevice;
+      RealTimeClockDevice& timeDevice;
       ControlConfiguration& configuration;
   }; // class TimeScheduler
 }; // namespace Core
