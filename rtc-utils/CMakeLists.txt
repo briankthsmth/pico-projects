@@ -32,6 +32,10 @@
 # Created by Brian Smith 07/12/2024
 #
 
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
+endif()
+
 add_executable(set-clock
   SetClock.cpp
 )

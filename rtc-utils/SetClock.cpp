@@ -32,20 +32,49 @@
 // Created by Brian Smith 07/12/2024
 //
 
+#include <cstdint>
 #include <cstdio>
 
 #include "pico/stdlib.h"
 
-#include "RealTimeClockDevice.h"
 #include "AfDS3231PrecisionRtcDevice.h"
+#include "SerialBus.h"
+#include "RealTimeClockDevice.h"
+
+uint8_t promptForInput(const char* message) {
+  unsigned int input;
+
+  printf("%s", message);
+  scanf("%u", &input);
+  auto value = static_cast<uint8_t>(input);
+  printf("%u\n", value);
+  
+  return value;
+}
 
 int main() {
   stdio_init_all();
-
-  Core::RealTimeClockDevice::ClockReading clockReading;
-  auto timeStamp = __TIMESTAMP__;
   
-  printf("%s\n", timeStamp);
+  Core::RealTimeClockDevice::ClockDatum clockReading;
+  
+  clockReading.date.dayOfWeek = promptForInput("Day of week? (1 = Sunday, ..., 7 = Saturday) ");
+  clockReading.date.month = promptForInput("Month? (1...12) ");
+  clockReading.date.dayOfMonth = promptForInput("Day of month? (1...31) ");
+  clockReading.date.year = promptForInput("Year? (0...99)");
+  clockReading.time.hour = promptForInput("Hour? (0...23)");
+  clockReading.time.minutes = promptForInput("Minutes? (0...59)");
+  clockReading.time.seconds = promptForInput("Seconds? (0...59)");
+  
+  std::printf("You entered: %s", clockReading.toString());
+  
+  Core::SerialBus serialBus;
+  Device::AfDS3231PrecisionRtcDevice rtc(serialBus);
+  rtc.write(clockReading);
+  
+  auto setClockReading = rtc.read();
+  printf("RTC set to: %s", setClockReading.toString());
+  
+  while (1) {}
   
   return 0;
 }

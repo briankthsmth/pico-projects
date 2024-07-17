@@ -36,30 +36,91 @@
 
 #include "AfDS3231PrecisionRtcDevice.h"
 
+#include "RealTimeClockDevice.h"
 #include "SerialBus.h"
 #include "SerialBusDevice.h"
 
 #include <cstdint>
 
+using namespace Core;
 using namespace Device;
 
 constexpr uint8_t serialBusAddress = 0x68;
 
 constexpr uint8_t secondsRegisterAddress = 0x00;
+constexpr uint8_t dayOfWeekRegisterAddress = 0x03;
 
-constexpr uint8_t timeValueDecimalMask = 0x70;
-constexpr uint8_t convertBsd(uint8_t value, uint8_t decimalMask) {
+constexpr uint8_t convertFromBcd(uint8_t value, uint8_t decimalMask) {
   return ((decimalMask & value) >> 4) * 10 + (0x0f & value);
 }
+constexpr uint8_t convertToBcd(uint8_t value, uint8_t decimalMask) {
+  return (((value / 10) << 4) & decimalMask) + (0x0f & (value % 10));
+}
 
-AfDS3231PrecisionRtcDevice::AfDS3231PrecisionRtcDevice(Core::SerialBus &bus)
-    : Core::SerialBusDevice(bus, serialBusAddress) {}
+constexpr uint8_t secondsDecimalMask      = 0x70;
+constexpr uint8_t minutesDecimalMask      = secondsDecimalMask;
+constexpr uint8_t hourDecimalMask         = 0x30;
+constexpr uint8_t dayOfMonthDecimalMask   = 0x30;
+constexpr uint8_t monthDecimalMask        = 0x10;
+constexpr uint8_t yearDecimalMask         = 0xf0;
+
+AfDS3231PrecisionRtcDevice::AfDS3231PrecisionRtcDevice(SerialBus &bus)
+    : SerialBusDevice(bus, serialBusAddress) {}
 
 void AfDS3231PrecisionRtcDevice::begin() {}
 
-Core::RealTimeClockDevice::Time AfDS3231PrecisionRtcDevice::readTime() {
-  TimeBuffer time;
-  readRegisters(secondsRegisterAddress, &time.data[0], 3);
-  return Time(convertBsd(time.time.seconds, timeValueDecimalMask), 
-    convertBsd(time.time.minutes, timeValueDecimalMask), 0);
+RealTimeClockDevice::Time AfDS3231PrecisionRtcDevice::readTime() {
+  TimeBuffer buffer;
+  readRegisters(secondsRegisterAddress, &buffer.data[0], 3);
+  
+  return Time(
+    convertFromBcd(buffer.time.seconds, secondsDecimalMask), 
+    convertFromBcd(buffer.time.minutes, minutesDecimalMask), 
+    convertFromBcd(buffer.time.hour, hourDecimalMask)
+  );
 }
+
+RealTimeClockDevice::Date AfDS3231PrecisionRtcDevice::readDate() {
+  DateBuffer buffer;
+  readRegisters(dayOfWeekRegisterAddress, &buffer.data[0], 4);
+  
+  return Date(
+    buffer.date.dayOfWeek,
+    convertFromBcd(buffer.date.dayOfMonth, dayOfMonthDecimalMask),
+    convertFromBcd(buffer.date.month, monthDecimalMask),
+    convertFromBcd(buffer.date.year, yearDecimalMask)
+  );
+}
+
+RealTimeClockDevice::ClockDatum AfDS3231PrecisionRtcDevice::read() {
+  ClockDatumBuffer buffer;
+  readRegisters(secondsRegisterAddress, &buffer.data[0], 7);
+  
+  return ClockDatum(
+    Time(
+      convertFromBcd(buffer.clockDatum.time.seconds, secondsDecimalMask), 
+      convertFromBcd(buffer.clockDatum.time.minutes, minutesDecimalMask), 
+      convertFromBcd(buffer.clockDatum.time.hour, hourDecimalMask)      
+    ),
+    Date(
+      buffer.clockDatum.date.dayOfWeek,
+      convertFromBcd(buffer.clockDatum.date.dayOfMonth, dayOfMonthDecimalMask),
+      convertFromBcd(buffer.clockDatum.date.month, monthDecimalMask),
+      convertFromBcd(buffer.clockDatum.date.year, yearDecimalMask)
+    )
+  );
+}
+
+void AfDS3231PrecisionRtcDevice::write(RealTimeClockDevice::ClockDatum clockDatum) {
+  ClockDatumBuffer buffer;
+  buffer.clockDatum.time.seconds = convertToBcd(clockDatum.time.seconds, secondsDecimalMask);
+  buffer.clockDatum.time.minutes = convertToBcd(clockDatum.time.minutes, minutesDecimalMask);
+  buffer.clockDatum.time.hour = convertToBcd(clockDatum.time.hour, hourDecimalMask);
+  buffer.clockDatum.date.dayOfWeek = clockDatum.date.dayOfWeek;
+  buffer.clockDatum.date.dayOfMonth = convertToBcd(clockDatum.date.dayOfMonth, dayOfMonthDecimalMask);
+  buffer.clockDatum.date.month = convertToBcd(clockDatum.date.month, monthDecimalMask);
+  buffer.clockDatum.date.year = convertToBcd(clockDatum.date.year, yearDecimalMask);
+  
+  writeRegisters(secondsRegisterAddress, &buffer.data[0], 7);
+}
+

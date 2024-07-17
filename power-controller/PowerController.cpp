@@ -65,7 +65,7 @@ int main() {
   Core::TimeScheduler scheduler(power_device, time_device, configuration);
   
   auto time = time_device.readTime();
-  printf("%d:%d:%d\n", time.hour, time.minutes, time.seconds);
+  printf("%2d:%2d:%2d\n", time.hour, time.minutes, time.seconds);
   
 loop:
   scheduler.update();

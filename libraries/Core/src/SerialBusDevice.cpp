@@ -35,19 +35,28 @@
 #include "SerialBusDevice.h"
 
 #include "SerialBus.h"
+#include <cstdint>
+#include <cstring>
 
 using namespace Core;
 
 SerialBusDevice::~SerialBusDevice() {}
 
 void SerialBusDevice::writeRegister(uint8_t address, uint8_t data) {
+  writeRegisters(address, &data, 1);
 }
 
 uint8_t SerialBusDevice::readRegister(uint8_t address) {
-  return 0; 
+  uint8_t buffer;
+  readRegisters(address, &buffer, 1);
+  return buffer; 
 }
 
 void SerialBusDevice::writeRegisters(uint8_t startAddress, uint8_t* source, size_t length) {
+  auto buffer = new uint8_t[length + 1]();
+  buffer[0] = startAddress;
+  memcpy(&buffer[1], source, length);
+  serialBus.write(deviceAddress, &buffer[0], length + 1);
 }
 
 void SerialBusDevice::readRegisters(uint8_t startAddress, uint8_t* destination, size_t length) {

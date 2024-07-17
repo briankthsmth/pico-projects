@@ -37,6 +37,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ctime>
 
 namespace Core {
 
@@ -54,48 +55,58 @@ public:
   };
   
   struct Date {
-    uint8_t day;
-    uint8_t date;
+    uint8_t dayOfWeek;
+    uint8_t dayOfMonth;
     uint8_t month;
     uint8_t year;
   };
   
-  struct ClockReading {
+  struct ClockDatum {
     Time time;
     Date date;
+    
+    char* toString() {
+      std::tm tm{};
+      tm.tm_sec = time.seconds;
+      tm.tm_min = time.minutes;
+      tm.tm_hour = time.hour;
+      tm.tm_wday = date.dayOfWeek - 1;
+      tm.tm_mday = date.dayOfMonth;
+      tm.tm_mon = date.month - 1;
+      tm.tm_year = date.year + 100; // From 1900.
+      return std::asctime(&tm);
+    }
   };
   
   RealTimeClockDevice() = default;
   RealTimeClockDevice(const RealTimeClockDevice&) = delete;
   ~RealTimeClockDevice() = default;
   
+  ///
+  /// \brief Abstract method to read the current time.
+  ///
+  /// \return A Time structure with the current time.
+  ///
   virtual Time readTime() = 0;
-//   virtual Date readDate() = 0;
-//   virtual ClockReading read() = 0;
+  ///
+  /// \brief Abstract method to read the current date.
+  ///
+  /// \return A Date structure with the current date.
+  ///
+  virtual Date readDate() = 0;
+  ///
+  /// \brief Abstract method to read the current date and time.
+  ///
+  /// \return A Date structure with the current date and time.
+  ///
+  virtual ClockDatum read() = 0;
   
-protected:
-  struct TimeBuffer {
-    union {
-      uint8_t data[3];
-      Time time;
-    };
-  };
-
-  struct DataBuffer {
-    union {
-      uint8_t data[3];
-      Date date;
-    };
-  };
-
-  struct ClockReadingBuffer {
-    union {
-      uint8_t data[16];
-      ClockReading reading;
-    };
-  };
-
-private:
+  ///
+  /// \brief Abstract method to write to a device a datum of clock time.
+  /// 
+  /// \param A ClockDatum with the date and time to write.
+  ///
+  virtual void write(ClockDatum clockDatum) = 0;
 }; // class RealTimeClockDevice
 
 }; // namespace Core

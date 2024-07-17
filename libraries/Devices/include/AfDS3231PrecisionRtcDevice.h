@@ -54,8 +54,33 @@ public:
   void begin() override;
 
   Time readTime() override;
+  Date readDate() override;
+  ClockDatum read() override;
+  
+  void write(ClockDatum clockDatum) override;
 
 private:
+  struct TimeBuffer {
+    union {
+      uint8_t data[3];
+      Time time;
+    };
+  };
+
+  struct DateBuffer {
+    union {
+      uint8_t data[4];
+      Date date;
+    };
+  };
+
+  struct ClockDatumBuffer {
+    union {
+      uint8_t data[7];
+      ClockDatum clockDatum;
+    };
+  };
+
 }; // class AfDS3231PrecisionRtcDevice
 
 }; // namespace Device
