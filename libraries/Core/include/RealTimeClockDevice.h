@@ -36,8 +36,7 @@
 
 #pragma once
 
-#include <cstdint>
-#include <ctime>
+#include "Clock.h"
 
 namespace Core {
 
@@ -48,35 +47,6 @@ namespace Core {
 ///
 class RealTimeClockDevice {
 public:
-  struct Time {
-    uint8_t seconds;
-    uint8_t minutes;
-    uint8_t hour;
-  };
-  
-  struct Date {
-    uint8_t dayOfWeek;
-    uint8_t dayOfMonth;
-    uint8_t month;
-    uint8_t year;
-  };
-  
-  struct ClockDatum {
-    Time time;
-    Date date;
-    
-    char* toString() {
-      std::tm tm{};
-      tm.tm_sec = time.seconds;
-      tm.tm_min = time.minutes;
-      tm.tm_hour = time.hour;
-      tm.tm_wday = date.dayOfWeek - 1;
-      tm.tm_mday = date.dayOfMonth;
-      tm.tm_mon = date.month - 1;
-      tm.tm_year = date.year + 100; // From 1900.
-      return std::asctime(&tm);
-    }
-  };
   
   RealTimeClockDevice() = default;
   RealTimeClockDevice(const RealTimeClockDevice&) = delete;

@@ -46,6 +46,23 @@ TimeScheduler::TimeScheduler(PowerDevice& powerDevice,
                              RealTimeClockDevice& timeDevice,
                              ControlConfiguration& configuration)
     : powerDevice(powerDevice), timeDevice(timeDevice),
-      configuration(configuration) {}
+      configuration(configuration) 
+{
+  powerDevice.setPowerLevel(configuration.powerLevel);
+}
 
-void TimeScheduler::update() {}
+void TimeScheduler::update() {
+  auto currentTime = timeDevice.readTime();
+  if (powerDevice.getStatus() == PowerDevice::off && 
+    currentTime >= configuration.startTime &&
+    currentTime <= configuration.endTime) 
+  {
+    powerDevice.setState(PowerDevice::on);
+  } else if (powerDevice.getStatus() == PowerDevice::on && 
+    (currentTime < configuration.startTime ||
+    currentTime > configuration.endTime)) 
+  {
+    powerDevice.setState(PowerDevice::off);
+  }
+}
+ 

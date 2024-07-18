@@ -69,7 +69,7 @@ AfDS3231PrecisionRtcDevice::AfDS3231PrecisionRtcDevice(SerialBus &bus)
 
 void AfDS3231PrecisionRtcDevice::begin() {}
 
-RealTimeClockDevice::Time AfDS3231PrecisionRtcDevice::readTime() {
+Time AfDS3231PrecisionRtcDevice::readTime() {
   TimeBuffer buffer;
   readRegisters(secondsRegisterAddress, &buffer.data[0], 3);
   
@@ -80,7 +80,7 @@ RealTimeClockDevice::Time AfDS3231PrecisionRtcDevice::readTime() {
   );
 }
 
-RealTimeClockDevice::Date AfDS3231PrecisionRtcDevice::readDate() {
+Date AfDS3231PrecisionRtcDevice::readDate() {
   DateBuffer buffer;
   readRegisters(dayOfWeekRegisterAddress, &buffer.data[0], 4);
   
@@ -92,7 +92,7 @@ RealTimeClockDevice::Date AfDS3231PrecisionRtcDevice::readDate() {
   );
 }
 
-RealTimeClockDevice::ClockDatum AfDS3231PrecisionRtcDevice::read() {
+ClockDatum AfDS3231PrecisionRtcDevice::read() {
   ClockDatumBuffer buffer;
   readRegisters(secondsRegisterAddress, &buffer.data[0], 7);
   
@@ -111,7 +111,7 @@ RealTimeClockDevice::ClockDatum AfDS3231PrecisionRtcDevice::read() {
   );
 }
 
-void AfDS3231PrecisionRtcDevice::write(RealTimeClockDevice::ClockDatum clockDatum) {
+void AfDS3231PrecisionRtcDevice::write(ClockDatum clockDatum) {
   ClockDatumBuffer buffer;
   buffer.clockDatum.time.seconds = convertToBcd(clockDatum.time.seconds, secondsDecimalMask);
   buffer.clockDatum.time.minutes = convertToBcd(clockDatum.time.minutes, minutesDecimalMask);

@@ -36,36 +36,22 @@
 
 #pragma once
 
-#include <cstdint>
+#include "Clock.h"
 
 namespace Core {
 
-struct ControlConfiguration final {
-  struct Time final {
-    ///
-    /// The hour in a day for the time in the range 0...23. 
-    ///
-    uint8_t hour;
-    ///
-    /// Minutes for the time in the range of 0...59.
-    ///
-    uint8_t minutes;
-    ///
-    /// Seconds for the time in the range of 0...59.
-    ///
-    uint8_t seconds;
-  }; // struct Time
-  
+struct ControlConfiguration final {  
   /// 
-  /// The start time in a day to switch a device "on".
+  /// \brief The start time in a day to switch a device "on".
   ///
   Time startTime = {0,0,0};
   ///
-  /// The end time in a day to switch a device "off".
+  /// \brief The end time in a day to switch a device "off".
   ///
   Time endTime = {0, 0, 0};
   ///
-  /// A power level for the "on" state for a device in the range of 0.0...1.0. This can
+  /// \brief The "on" state power level.
+  /// \description A power level for the "on" state for a device in the range of 0.0...1.0. This can
   /// be ignored by a device that only toggles between on and off.
   ///
   float powerLevel = 1.0;

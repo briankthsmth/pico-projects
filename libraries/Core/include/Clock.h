@@ -29,54 +29,63 @@
 //
 //
 //
-// Created by Brian Smith 07/03/2024
+// Created by Brian Smith 07/18/2024
 //
 
-#include "PowerDevice.h"
+#pragma once
 
-#include "pico/stdlib.h"
-#include "pico/time.h"
+#include <cstdint>
+#include <ctime>
+#include <compare>
 
-#include <cstdio>
+namespace Core {
 
-#include "AfDS3231PrecisionRtcDevice.h"
-#include "AfPowerRelayDevice.h"
-#include "ControlConfiguration.h"
-#include "SerialBus.h"
-#include "TimeScheduler.h"
+  struct Time final {
+    ///
+    /// Seconds for the time in the range of 0...59.
+    ///
+    uint8_t seconds;
+    ///
+    /// Minutes for the time in the range of 0...59.
+    ///
+    uint8_t minutes;
+    ///
+    /// \brief The hour in a day for the time in the range 0...23. 
+    ///
+    uint8_t hour;
+    
+    uint32_t inSeconds() const {
+      return ((static_cast<uint32_t>(hour) * 60.0) + static_cast<uint32_t>(minutes)) * 60.0 
+        + static_cast<uint32_t>(seconds);
+    }
+    
+    friend auto operator<=>(const Time& time, const Time& other) {
+      return time.inSeconds() <=> other.inSeconds();
+    }
+  }; // struct Time
+  
+  struct Date final {
+    uint8_t dayOfWeek;
+    uint8_t dayOfMonth;
+    uint8_t month;
+    uint8_t year;
+  }; // struct Date
+  
+  struct ClockDatum final {
+    Time time;
+    Date date;
+    
+    char* toString() {
+      std::tm tm{};
+      tm.tm_sec = time.seconds;
+      tm.tm_min = time.minutes;
+      tm.tm_hour = time.hour;
+      tm.tm_wday = date.dayOfWeek - 1;
+      tm.tm_mday = date.dayOfMonth;
+      tm.tm_mon = date.month - 1;
+      tm.tm_year = date.year + 100; // From 1900.
+      return std::asctime(&tm);
+    }
+  }; // struct ClockDatum
 
-int main() {
-
-  //
-  // Setup
-  //
-  stdio_init_all();
-  
-  Core::SerialBus serialBus;
-  
-  Device::AfDS3231PrecisionRtcDevice timeDevice(serialBus); 
-  timeDevice.begin();
-  
-  Device::AfPowerRelayDevice powerDevice(Device::RelayControlGpio::gpio10);
-  powerDevice.begin();
-  
-  Core::ControlConfiguration configuration;
-  configuration.startTime.hour = 6; 
-  configuration.startTime.minutes = 30;
-  configuration.startTime.seconds = 0;
-  configuration.endTime.hour = 20;
-  configuration.endTime.minutes = 0;
-  configuration.endTime.seconds = 0;
-  
-  Core::TimeScheduler scheduler(powerDevice, timeDevice, configuration);
-  
-  
-loop:
-  auto time = timeDevice.readTime();
-  scheduler.update();
-  
-  sleep_ms(1000); // sleep for 1 seconds
-  goto loop;
-  
-  return 0;
-}
+} // namespace Core

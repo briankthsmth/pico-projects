@@ -55,7 +55,7 @@ uint8_t promptForInput(const char* message) {
 int main() {
   stdio_init_all();
   
-  Core::RealTimeClockDevice::ClockDatum clockReading;
+  Core::ClockDatum clockReading;
   
   clockReading.date.dayOfWeek = promptForInput("Day of week? (1 = Sunday, ..., 7 = Saturday) ");
   clockReading.date.month = promptForInput("Month? (1...12) ");

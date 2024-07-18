@@ -41,9 +41,13 @@
 
 namespace Device {
 
+enum class RelayControlGpio : unsigned int {
+  gpio10 = 10 // 2nd jumper on left from bottom.
+};
+
 class AfPowerRelayDevice final : public Core::PowerDevice, Core::Device {
 public:
-  AfPowerRelayDevice() = default;
+  AfPowerRelayDevice(RelayControlGpio gpio);
   AfPowerRelayDevice(const AfPowerRelayDevice&) = delete;
   ~AfPowerRelayDevice() = default;
   
@@ -52,6 +56,7 @@ public:
   void setState(State) override;
   
 private:
+  RelayControlGpio gpio;
 }; // class AfPowerRelayDevice
 
 }; // namespace Device

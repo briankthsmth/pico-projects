@@ -36,6 +36,7 @@
 
 #pragma once
 
+#include "Clock.h"
 #include "Device.h"
 #include "RealTimeClockDevice.h"
 #include "SerialBus.h"
@@ -53,31 +54,31 @@ public:
 
   void begin() override;
 
-  Time readTime() override;
-  Date readDate() override;
-  ClockDatum read() override;
+  Core::Time readTime() override;
+  Core::Date readDate() override;
+  Core::ClockDatum read() override;
   
-  void write(ClockDatum clockDatum) override;
+  void write(Core::ClockDatum clockDatum) override;
 
 private:
   struct TimeBuffer {
     union {
       uint8_t data[3];
-      Time time;
+      Core::Time time;
     };
   };
 
   struct DateBuffer {
     union {
       uint8_t data[4];
-      Date date;
+      Core::Date date;
     };
   };
 
   struct ClockDatumBuffer {
     union {
       uint8_t data[7];
-      ClockDatum clockDatum;
+      Core::ClockDatum clockDatum;
     };
   };
 
