@@ -29,58 +29,30 @@
 //
 //
 //
-// Created by Brian Smith 07/03/2024
+// Created by Brian Smith 07/23/2024
 //
 
-#include "PowerDevice.h"
+#pragma once
 
-#include "pico/stdlib.h"
-#include "pico/time.h"
+#include <cstdint>
+namespace Core {
 
-#include <cstdio>
+class DisplayRenderable {
+public:
+  struct RenderArea {
+    uint8_t startColumn;
+    uint8_t endColumn;
+    uint8_t startPage;
+    uint8_t endPage;
 
-#include "Af128x64FeatherMonoDisplayDevice.h"
-#include "AfDS3231PrecisionRtcDevice.h"
-#include "AfPowerRelayDevice.h"
-#include "ControlConfiguration.h"
-#include "SerialBus.h"
-#include "TimeScheduler.h"
+    int getBufferLength();
+  };
 
-int main() {
+  DisplayRenderable() = default;
+  DisplayRenderable(const DisplayRenderable&) = delete;
+  ~DisplayRenderable() = default;
+  
+  virtual void render(uint8_t* data, RenderArea area) = 0;
+};
 
-  //
-  // Setup
-  //
-  stdio_init_all();
-  
-  Core::SerialBus serialBus;
-  
-  Device::Af128x64FeatherMonoDisplayDevice displayDevice(serialBus);
-  displayDevice.init();
-  
-  Device::AfDS3231PrecisionRtcDevice timeDevice(serialBus); 
-  timeDevice.init();
-  
-  Device::AfPowerRelayDevice powerDevice(Device::RelayControlGpio::gpio10);
-  powerDevice.init();
-  
-  Core::ControlConfiguration configuration;
-  configuration.startTime.hour = 6; 
-  configuration.startTime.minutes = 30;
-  configuration.startTime.seconds = 0;
-  configuration.endTime.hour = 20;
-  configuration.endTime.minutes = 0;
-  configuration.endTime.seconds = 0;
-  
-  Core::TimeScheduler scheduler(powerDevice, timeDevice, configuration);
-  
-  
-loop:
-  auto time = timeDevice.readTime();
-  scheduler.update();
-  
-  sleep_ms(1000); // sleep for 1 seconds
-  goto loop;
-  
-  return 0;
-}
+} // namespace Core

@@ -42,7 +42,7 @@ public:
   Device(const Device&) = delete;
   ~Device() = default;
   
-  virtual void begin() = 0;
+  virtual void init() = 0;
 }; // class Device
 
 }; // namespace Core

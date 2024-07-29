@@ -37,6 +37,7 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
 endif()
 
 add_library(Devices
+  src/Af128x64FeatherMonoDisplayDevice.cpp
   src/AfDS3231PrecisionRtcDevice.cpp
   src/AfPowerRelayDevice.cpp
 )

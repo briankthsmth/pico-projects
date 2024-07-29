@@ -51,7 +51,7 @@ public:
   AfPowerRelayDevice(const AfPowerRelayDevice&) = delete;
   ~AfPowerRelayDevice() = default;
   
-  void begin() override;
+  void init() override;
   
   void setState(State) override;
   

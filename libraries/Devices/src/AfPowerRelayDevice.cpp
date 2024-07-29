@@ -41,7 +41,7 @@ using namespace Device;
 
 AfPowerRelayDevice::AfPowerRelayDevice(RelayControlGpio gpio) : gpio(gpio) {}
 
-void AfPowerRelayDevice::begin() {
+void AfPowerRelayDevice::init() {
   auto gpioValue = static_cast<unsigned int>(gpio);
   gpio_init(gpioValue);
   gpio_set_dir(gpioValue, GPIO_OUT);

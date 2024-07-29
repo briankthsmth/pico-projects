@@ -67,7 +67,7 @@ constexpr uint8_t yearDecimalMask         = 0xf0;
 AfDS3231PrecisionRtcDevice::AfDS3231PrecisionRtcDevice(SerialBus &bus)
     : SerialBusDevice(bus, serialBusAddress) {}
 
-void AfDS3231PrecisionRtcDevice::begin() {}
+void AfDS3231PrecisionRtcDevice::init() {}
 
 Time AfDS3231PrecisionRtcDevice::readTime() {
   TimeBuffer buffer;

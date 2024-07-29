@@ -44,15 +44,15 @@
 
 namespace Device {
 
-class AfDS3231PrecisionRtcDevice final : public Core::RealTimeClockDevice,
-                                         Core::Device,
-                                         private Core::SerialBusDevice 
+class AfDS3231PrecisionRtcDevice final : 
+  public Core::RealTimeClockDevice, Core::Device,
+  private Core::SerialBusDevice 
 {
 public:
   AfDS3231PrecisionRtcDevice(Core::SerialBus &);
   ~AfDS3231PrecisionRtcDevice() = default;
 
-  void begin() override;
+  void init() override;
 
   Core::Time readTime() override;
   Core::Date readDate() override;
