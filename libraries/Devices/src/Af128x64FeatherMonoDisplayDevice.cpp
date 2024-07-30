@@ -37,6 +37,7 @@
 #include "Af128x64FeatherMonoDisplayDevice.h"
 
 #include <cstdint>
+#include <cstring>
 
 constexpr uint8_t busAddress = 0x3c;
 
@@ -62,9 +63,6 @@ constexpr uint8_t setRatioAndFrequencyModeCommand = 0xd5; // Needs extra data by
 constexpr uint8_t setDisChargeAndPreChargePeriodModeCommand = 0xd9; // Needs extra data byte
 constexpr uint8_t setVCOMDeselectLevelCommand = 0xdb; // Needs extra data byte
 constexpr uint8_t setDisplayStartLineCommand = 0xdc;  // Needs extra data byte
-constexpr uint8_t nopCommand = 0xe3;
-constexpr uint8_t readModifyWriteStartCommand = 0xe0;
-constexpr uint8_t readModifyWriteEndCommand = 0xee;
 
 using namespace Device;
 using namespace Core;
@@ -74,66 +72,106 @@ Af128x64FeatherMonoDisplayDevice::Af128x64FeatherMonoDisplayDevice(
     : SerialBusDevice(bus, busAddress) {}
 
 void Af128x64FeatherMonoDisplayDevice::init() {
-  uint8_t commandList[] = {displayOffCommand,
-                           setColumnLowNibbleAddressCommand,
-                           setColumnHighNibbleAddressCommand,
-                           setPageAddressCommand,
-                           setDisplayStartLineCommand,
-                           0x00,
-                           setConstrastSettingCommand,
-                           0x6e,
-                           setMemoryPageAddressingModeCommand,
-                           setSegmentRemapDownCommand,
-                           setCommonOutputScanDirectionCommand,
-                           setToAllNormalCommand,
-                           setToNormalDisplayCommand,
-                           setMultiplexRationCommand,
-                           0x3f,
-                           setDisplayOffsetCommand,
-                           0x60,
-                           setRatioAndFrequencyModeCommand,
-                           0x41,
-                           setDisChargeAndPreChargePeriodModeCommand,
-                           0x22,
-                           setVCOMDeselectLevelCommand,
-                           0x35,
-                           setDcToDcSettingModeCommand,
-                           0x80, // external Vpp used
-                           displayOnCommand};
-
-  sendCommandList(&commandList[0], sizeof(commandList));
+  uint8_t commandList[] = {
+    displayOffCommand,
+    setColumnLowNibbleAddressCommand,
+    setColumnHighNibbleAddressCommand,
+    setPageAddressCommand,
+    setDisplayStartLineCommand,
+    0x00,
+    setConstrastSettingCommand,
+    0x6e,
+    setMemoryPageAddressingModeCommand,
+    setSegmentRemapDownCommand,
+    setCommonOutputScanDirectionCommand,
+    setToAllNormalCommand,
+    setToNormalDisplayCommand,
+    setMultiplexRationCommand,
+    0x3f,
+    setDisplayOffsetCommand,
+    0x60,
+    setRatioAndFrequencyModeCommand,
+    0x41,
+    setDisChargeAndPreChargePeriodModeCommand,
+    0x22,
+    setVCOMDeselectLevelCommand,
+    0x35,
+    setDcToDcSettingModeCommand,
+    0x80 // external Vpp used
+  };
+  writeCommandList(&commandList[0], sizeof(commandList));
+  
+  clear();
+  
+  uint8_t onCommand = displayOnCommand;
+  writeCommandList(&onCommand, 1);
 }
 
-void Af128x64FeatherMonoDisplayDevice::render(
-    uint8_t *data, DisplayRenderable::RenderArea area) {}
+void Af128x64FeatherMonoDisplayDevice::render(uint8_t *data, 
+                                              DisplayRenderable::RenderArea area) 
+{
+  uint8_t lengthInPage = area.endColumn - area.startColumn + 1;
+  for (int page = area.startPage; page <= area.endPage; ++page) {
+    writeInPage(page, area.startColumn, &data[page * lengthInPage], lengthInPage);
+  }
+}
 
-void Af128x64FeatherMonoDisplayDevice::sendCommandList(uint8_t *commands,
+void Af128x64FeatherMonoDisplayDevice::clear() {
+  auto properties = getProperties();
+  int bufferLength = properties.maxPages * properties.width;
+  uint8_t clearBuffer[bufferLength];
+  memset(&clearBuffer[0], 0, bufferLength);
+  
+  uint8_t endPage = properties.maxPages - 1;
+  uint8_t endColumn = properties.width - 1; 
+  RenderArea area = {0, endColumn, 0, endPage};
+  render(&clearBuffer[0], area);
+}
+
+DisplayRenderable::Properties Af128x64FeatherMonoDisplayDevice::getProperties() const {
+  static const uint8_t width = 64;
+  static const uint8_t height = 128;
+  static const Properties properties = {width, height, height/8};
+  return properties;
+}
+
+//
+// Private Interface
+//
+void Af128x64FeatherMonoDisplayDevice::writeCommandList(uint8_t *commands,
                                                        int length) 
 {
+  write(commands, length, command);
+}
+
+void Af128x64FeatherMonoDisplayDevice::writeInPage(uint8_t page,
+                                                   uint8_t startAddress,
+                                                   uint8_t *source,
+                                                   int length) 
+{
+  uint8_t pageCommand = setPageAddressCommand | (0x0f & page);
+  uint8_t lowNibbleAddressCommand = setColumnLowNibbleAddressCommand | (0x0f & startAddress);
+  uint8_t highNibbleAddressCommand = setColumnHighNibbleAddressCommand | (0x07 & (startAddress >> 4));
+  uint8_t addressCommandList[] = {
+    pageCommand,
+    lowNibbleAddressCommand,
+    highNibbleAddressCommand,
+  };
+  writeCommandList(addressCommandList, sizeof(addressCommandList));
+  write(source, length, ram);
+}
+
+void Af128x64FeatherMonoDisplayDevice::write(uint8_t* source, int length, DataType type) {
   int writeLength = 2 * length;
+  uint8_t controlByte = type == command ? 0x00 : 0x40;
   uint8_t *buffer = new uint8_t[writeLength];
   for (int commandIndex = 0; commandIndex < length; ++commandIndex) {
     int controlIndex = 2 * commandIndex;
     int dataIndex = controlIndex + 1;
-    buffer[controlIndex] = commandIndex < (length - 1) ? 0x80 : 0x00;
-    buffer[dataIndex] = commands[commandIndex];
+    uint8_t continueFlag = commandIndex < (length - 1) ? 0x80 : 0x00;
+    buffer[controlIndex] = controlByte | continueFlag;
+    buffer[dataIndex] = source[commandIndex];
   }
   serialBus.write(deviceAddress, &buffer[0], writeLength);
   delete[] buffer;
-}
-
-void Af128x64FeatherMonoDisplayDevice::writeDisplayData(uint8_t startPage,
-                                                        uint8_t startAddress,
-                                                        uint8_t *source,
-                                                        int length) 
-{
-  uint8_t lowNibbleAddressCommand = setColumnLowNibbleAddressCommand & (0x0f & startAddress);
-  uint8_t highNibbleAddressCommand = setColumnHighNibbleAddressCommand & (0x07 & (startAddress >> 4));
-  uint8_t pageCommand = setPageAddressCommand & (0x0f & startPage);
-  uint8_t addressCommandList[] = {
-    lowNibbleAddressCommand,
-    highNibbleAddressCommand,
-    pageCommand
-  };
-  sendCommandList(addressCommandList, sizeof(addressCommandList));
 }

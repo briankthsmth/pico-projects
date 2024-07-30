@@ -41,19 +41,13 @@
 namespace Core {
 
 struct ControlConfiguration final {  
-  /// 
   /// \brief The start time in a day to switch a device "on".
-  ///
   Time startTime = {0,0,0};
-  ///
   /// \brief The end time in a day to switch a device "off".
-  ///
   Time endTime = {0, 0, 0};
-  ///
   /// \brief The "on" state power level.
   /// \description A power level for the "on" state for a device in the range of 0.0...1.0. This can
   /// be ignored by a device that only toggles between on and off.
-  ///
   float powerLevel = 1.0;
 }; // struct ControlConfiguration
 

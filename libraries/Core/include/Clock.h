@@ -41,17 +41,11 @@
 namespace Core {
 
   struct Time final {
-    ///
-    /// Seconds for the time in the range of 0...59.
-    ///
+    /// \brief Seconds for the time in the range of 0...59.
     uint8_t seconds;
-    ///
-    /// Minutes for the time in the range of 0...59.
-    ///
+    /// \brief Minutes for the time in the range of 0...59.
     uint8_t minutes;
-    ///
     /// \brief The hour in a day for the time in the range 0...23. 
-    ///
     uint8_t hour;
     
     uint32_t inSeconds() const {

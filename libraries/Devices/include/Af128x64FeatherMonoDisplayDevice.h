@@ -53,10 +53,14 @@ public:
   void init() override;
   
   void render(uint8_t *data, Core::DisplayRenderable::RenderArea area) override;
+  void clear() override;
+  Properties getProperties() const override;
   
 private:
-  void sendCommandList(uint8_t*, int);
-  void writeDisplayData(uint8_t, uint8_t, uint8_t*, int);
+  enum DataType {command, ram};
+  void writeCommandList(uint8_t*, int);
+  void writeInPage(uint8_t, uint8_t, uint8_t*, int);
+  void write(uint8_t*, int, DataType);
 }; // class Af128x64FeatherMonoDisplayDevice
 
 } // namespace Device

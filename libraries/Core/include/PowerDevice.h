@@ -67,7 +67,9 @@ public:
   State getStatus() { return status; }
 
 protected:
+  /// \brief The power status of a device. Default: off
   State status = off;
+  /// \brief The power level to set the device. Range: 0.0...1.0, Default: 1.0
   float powerLevel = 1.0;
 }; // class PowerDevice
 

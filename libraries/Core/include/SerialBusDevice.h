@@ -57,13 +57,9 @@ public:
   void readRegisters(uint8_t startAddress, uint8_t* destination, size_t length);
 
 protected:
-  ///
   /// \brief Property for sub-classes to access the I2C bus.
-  ///
   SerialBus& serialBus;
-  ///
   /// \brief Bus address for a physical device.
-  ///
   uint8_t deviceAddress;
 }; // class SerialBusDevice
 
